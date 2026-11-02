@@ -1,0 +1,326 @@
+<title>Przygotowanie do warsztatu CI/CD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --ground:#f6f7f9; --surface:#ffffff; --sunken:#eef1f4;
+  --ink:#18222c; --ink-soft:#4d5c6b; --ink-faint:#7a8794;
+  --line:#dde3e9; --line-strong:#c3ccd6;
+  --accent:#0f6e78; --accent-ink:#0b545c; --accent-wash:#e4f1f2;
+  --ok:#1c7a4d; --ok-wash:#e5f2ea;
+  --warn:#8a5a00; --warn-wash:#fbf0dc;
+  --stop:#9d2b21; --stop-wash:#fbe8e6;
+  --term-bg:#10222b; --term-ink:#d6e4e8; --term-dim:#6f8b95;
+  --radius:10px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#101820; --surface:#18222c; --sunken:#131c24;
+    --ink:#e6ecf2; --ink-soft:#a7b4c1; --ink-faint:#7d8b99;
+    --line:#27333f; --line-strong:#384856;
+    --accent:#4fbcc6; --accent-ink:#7fd3da; --accent-wash:#123138;
+    --ok:#5cc48b; --ok-wash:#12291f;
+    --warn:#d9a441; --warn-wash:#2b2313;
+    --stop:#e88379; --stop-wash:#2d1a18;
+    --term-bg:#0b161c; --term-ink:#cfe0e5; --term-dim:#61818c;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#101820; --surface:#18222c; --sunken:#131c24;
+  --ink:#e6ecf2; --ink-soft:#a7b4c1; --ink-faint:#7d8b99;
+  --line:#27333f; --line-strong:#384856;
+  --accent:#4fbcc6; --accent-ink:#7fd3da; --accent-wash:#123138;
+  --ok:#5cc48b; --ok-wash:#12291f;
+  --warn:#d9a441; --warn-wash:#2b2313;
+  --stop:#e88379; --stop-wash:#2d1a18;
+  --term-bg:#0b161c; --term-ink:#cfe0e5; --term-dim:#61818c;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--ground); color:var(--ink);
+  font:400 16px/1.65 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  margin:0; padding:0 20px 96px;
+}
+.wrap{max-width:760px;margin:0 auto}
+.eyebrow{
+  font:600 12px/1 "IBM Plex Mono",ui-monospace,monospace;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--accent-ink);
+  margin:48px 0 14px;
+}
+h1{
+  font-size:clamp(30px,5vw,42px); line-height:1.12; font-weight:700;
+  letter-spacing:-.02em; margin:0 0 12px; text-wrap:balance;
+}
+.lede{font-size:18px; color:var(--ink-soft); margin:0 0 26px; text-wrap:pretty}
+.facts{
+  display:flex; flex-wrap:wrap; gap:10px; padding:0 0 32px;
+  border-bottom:1px solid var(--line); margin-bottom:8px;
+}
+.fact{
+  font:600 12.5px/1 "IBM Plex Mono",ui-monospace,monospace;
+  border:1px solid var(--line-strong); border-radius:999px;
+  padding:7px 13px; color:var(--ink-soft);
+}
+h2{
+  font-size:15px; font-weight:700; letter-spacing:.02em;
+  margin:0 0 6px; display:flex; align-items:baseline; gap:11px;
+}
+h2 .num{
+  font:600 12px/1 "IBM Plex Mono",ui-monospace,monospace;
+  color:var(--surface); background:var(--accent);
+  border-radius:5px; padding:5px 7px; flex:none;
+}
+h2 .txt{font-size:21px; letter-spacing:-.01em}
+section{margin:40px 0 0}
+p{margin:0 0 14px; max-width:66ch}
+a{color:var(--accent-ink); text-underline-offset:3px}
+a:focus-visible,input:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:3px}
+code{
+  font:400 .89em/1 "IBM Plex Mono",ui-monospace,monospace;
+  background:var(--sunken); border:1px solid var(--line);
+  border-radius:4px; padding:2px 5px;
+}
+pre{
+  background:var(--term-bg); color:var(--term-ink);
+  border-radius:var(--radius); padding:16px 18px; margin:16px 0;
+  overflow-x:auto;
+  font:400 13.5px/1.7 "IBM Plex Mono",ui-monospace,monospace;
+}
+pre .c{color:var(--term-dim)}
+table{
+  width:100%; border-collapse:collapse; margin:16px 0; font-size:15px;
+  display:block; overflow-x:auto; white-space:nowrap;
+}
+th,td{text-align:left; padding:10px 14px; border-bottom:1px solid var(--line)}
+th{
+  font:600 11.5px/1 "IBM Plex Mono",ui-monospace,monospace;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint);
+}
+td:first-child{font-weight:500}
+.call{
+  border-left:3px solid var(--accent); background:var(--accent-wash);
+  border-radius:0 var(--radius) var(--radius) 0;
+  padding:14px 18px; margin:18px 0;
+}
+.call.stop{border-color:var(--stop); background:var(--stop-wash)}
+.call.ok{border-color:var(--ok); background:var(--ok-wash)}
+.call.warn{border-color:var(--warn); background:var(--warn-wash)}
+.call p{margin:0; max-width:none}
+.call p + p{margin-top:9px}
+.call strong{color:var(--ink)}
+ol.steps{margin:14px 0; padding-left:22px}
+ol.steps li{margin-bottom:7px}
+.check{
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--radius); padding:8px 4px; margin:18px 0;
+}
+.check label{
+  display:flex; gap:13px; align-items:flex-start;
+  padding:9px 14px; cursor:pointer; border-radius:6px;
+}
+.check label:hover{background:var(--sunken)}
+.check input{
+  appearance:none; width:18px; height:18px; flex:none; margin-top:3px;
+  border:1.5px solid var(--line-strong); border-radius:4px;
+  background:var(--surface); cursor:pointer; position:relative;
+  transition:background .12s ease, border-color .12s ease;
+}
+.check input:checked{background:var(--ok); border-color:var(--ok)}
+.check input:checked::after{
+  content:""; position:absolute; left:5px; top:1px;
+  width:5px; height:10px; border:solid #fff;
+  border-width:0 2px 2px 0; transform:rotate(42deg);
+}
+.check input:checked + span{color:var(--ink-faint); text-decoration:line-through}
+.check span{font-size:15px}
+.done{
+  font:600 12.5px/1 "IBM Plex Mono",ui-monospace,monospace;
+  color:var(--ink-faint); padding:10px 18px 4px; display:block;
+}
+footer{
+  margin-top:56px; padding-top:22px; border-top:1px solid var(--line);
+  color:var(--ink-faint); font-size:14px;
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Warsztat · GitHub Actions</p>
+  <h1>Przygotowanie do warsztatu</h1>
+  <p class="lede">Szybki feedback w CI/CD: jak zaprojektować pipeline, który buduje, testuje i wdraża bez utraty jakości.</p>
+  <div class="facts">
+    <span class="fact">~30 minut</span>
+    <span class="fact">6 kroków</span>
+  </div>
+
+  <p>Warsztat ma charakter praktyczny — większość czasu spędzisz, pracując we własnym repozytorium.
+  Aby nie tracić pierwszej godziny na instalację i konfigurację środowiska, wykonaj poniższe kroki
+  <strong>przed warsztatem</strong>. Całość powinna zająć około 30 minut.</p>
+
+  <div class="call warn">
+    <p><strong>Przynieś własny laptop</strong>, na którym możesz instalować oprogramowanie i korzystać
+    z sieci bez ograniczeń. Firmowy VPN lub zasady bezpieczeństwa mogą blokować <code>npm</code>
+    albo GitHuba, dlatego sprawdź to wcześniej.</p>
+  </div>
+
+  <section>
+    <h2><span class="num">01</span><span class="txt">Narzędzia</span></h2>
+    <p>Zainstaluj trzy narzędzia w podanych wersjach:</p>
+    <table>
+      <tr><th>Narzędzie</th><th>Wersja</th><th>Strona</th></tr>
+      <tr><td>Visual Studio Code</td><td>dowolna aktualna</td><td><a href="https://code.visualstudio.com/download">code.visualstudio.com</a></td></tr>
+      <tr><td>Node.js</td><td><strong>22 LTS lub nowsza</strong></td><td><a href="https://nodejs.org/">nodejs.org</a></td></tr>
+      <tr><td>Git</td><td>dowolna aktualna</td><td><a href="https://git-scm.com/downloads">git-scm.com</a></td></tr>
+    </table>
+    <p>Po instalacji otwórz terminal i sprawdź, czy wszystkie narzędzia działają:</p>
+    <pre>node --version   <span class="c"># v22.x lub nowsza</span>
+npm --version
+git --version</pre>
+  </section>
+
+  <section>
+    <h2><span class="num">02</span><span class="txt">Konto GitHub</span></h2>
+    <p>Potrzebujesz <strong>prywatnego konta GitHub</strong>. Darmowy plan w zupełności wystarczy.</p>
+    <p>Jeśli na co dzień korzystasz z konta firmowego objętego logowaniem SSO, na potrzeby warsztatu
+    użyj konta prywatnego. Firmowe zasady bezpieczeństwa mogą ograniczać tworzenie publicznych
+    repozytoriów i uruchamianie workflowów.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">03</span><span class="txt">Własna kopia repozytorium</span></h2>
+    <p>Otwórz <a href="https://github.com/tklepacki/cicd-fast-feedback-workshop">repozytorium
+    warsztatowe</a> i kliknij zielony przycisk <strong>Use this template</strong> →
+    <strong>Create a new repository</strong>. Wybierz następujące ustawienia:</p>
+    <table>
+      <tr><th>Pole</th><th>Ustawienie</th></tr>
+      <tr><td>Include all branches (przełącznik na górze formularza)</td><td>pozostaw <strong>wyłączony</strong></td></tr>
+      <tr><td>Owner</td><td>Twoje prywatne konto GitHub</td></tr>
+      <tr><td>Repository name</td><td>dowolna nazwa, np. <code>cicd-workshop</code></td></tr>
+      <tr><td>Visibility</td><td><strong>Public</strong></td></tr>
+    </table>
+    <p>Potrzebujesz tylko gałęzi <code>main</code>. Pozostałe gałęzie pobierzesz w trakcie warsztatu.</p>
+    <div class="call stop">
+      <p><strong>Repozytorium musi być publiczne.</strong> Nie chodzi o udostępnianie Twojego kodu.
+      Na darmowym planie repozytoria publiczne mają nielimitowane minuty GitHub Actions i mocniejsze
+      maszyny (4 rdzenie zamiast 2). W repozytorium prywatnym części ćwiczeń nie da się wykonać.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">04</span><span class="txt">Klonowanie i instalacja zależności</span></h2>
+    <p>Sklonuj utworzone repozytorium na swój komputer, przejdź do jego katalogu i zainstaluj zależności:</p>
+    <pre>git clone &lt;adres-Twojego-repozytorium&gt;
+cd &lt;nazwa-katalogu&gt;
+
+npm ci
+npx playwright install --with-deps chromium</pre>
+    <div class="call">
+      <p>Instalacja przeglądarki jest konieczna, bo podczas warsztatu pracujemy także z testami UI,
+      a nie tylko API. Pobieranie Chromium może chwilę potrwać, dlatego zrób to przed warsztatem.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">05</span><span class="txt">Sprawdzenie środowiska</span></h2>
+    <p>Uruchom poniższe polecenia, aby upewnić się, że wszystko działa prawidłowo:</p>
+    <pre>npm run verify        <span class="c"># lint + typecheck + build + testy jednostkowe</span>
+npm run test:smoke    <span class="c"># 5 testów UI</span>
+npm run dev           <span class="c"># aplikacja: http://localhost:5173</span></pre>
+    <p>Pierwsze polecenie powinno zakończyć się bez błędów i wyświetlić wynik <strong>78 passed</strong>.
+    Drugie powinno zakończyć się wynikiem <strong>5 passed</strong>.</p>
+    <p>Aplikacja jest prostym sklepem z katalogiem produktów, koszykiem i formularzem zamówienia.
+    Dokumentację API znajdziesz pod adresem <code>http://localhost:3000/api/docs</code>, gdy aplikacja
+    jest uruchomiona.</p>
+  </section>
+
+  <section>
+    <h2><span class="num">06</span><span class="txt">Sprawdzenie pipeline'u</span></h2>
+    <p>Po utworzeniu repozytorium pipeline uruchamia się automatycznie. Przejdź do swojego repozytorium
+    na GitHubie, otwórz zakładkę <strong>Actions</strong> i zaczekaj na zakończenie pierwszego przebiegu.
+    Powinien zakończyć się na zielono i trwać nieco ponad trzy minuty.</p>
+    <p>Jeśli zobaczysz informację, że workflowy są wyłączone, włącz je przyciskiem na tej stronie,
+    a następnie wypchnij dowolny commit na <code>main</code>.</p>
+    <p>Może pojawić się żółty pasek <em>Compare &amp; pull request</em> — możesz go zignorować.</p>
+    <p>Na koniec sprawdź, czy możesz wysyłać zmiany do swojego repozytorium — od pierwszego zadania
+    będzie to potrzebne:</p>
+    <pre>git commit --allow-empty -m "Check push access"
+git push</pre>
+    <p>Push powinien przejść bez błędów, a w zakładce <strong>Actions</strong> powinien pojawić się
+    nowy przebieg.</p>
+    <div class="call ok">
+      <p><strong>Trzy minuty to nie błąd, tylko nasz punkt wyjścia.</strong> Podczas warsztatu
+      będziemy stopniowo skracać ten czas, a na koniec porównamy wyniki i sprawdzimy, które zmiany
+      rzeczywiście pomogły.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">✓</span><span class="txt">Lista kontrolna</span></h2>
+    <p>Sprawdź przed warsztatem:</p>
+    <div class="check" id="check">
+      <label><input type="checkbox"><span>Node.js w wersji 22 lub nowszej jest zainstalowany</span></label>
+      <label><input type="checkbox"><span>Git działa poprawnie</span></label>
+      <label><input type="checkbox"><span>Visual Studio Code jest zainstalowany</span></label>
+      <label><input type="checkbox"><span>Mam prywatne konto GitHub</span></label>
+      <label><input type="checkbox"><span>Repozytorium utworzone z szablonu jest <strong>publiczne</strong></span></label>
+      <label><input type="checkbox"><span>Polecenie <code>npm ci</code> zakończyło się bez błędów</span></label>
+      <label><input type="checkbox"><span>Playwright i Chromium są zainstalowane</span></label>
+      <label><input type="checkbox"><span><code>npm run verify</code> — 78 testów zakończonych powodzeniem</span></label>
+      <label><input type="checkbox"><span><code>npm run test:smoke</code> — 5 testów zakończonych powodzeniem</span></label>
+      <label><input type="checkbox"><span>Pierwszy przebieg w GitHub Actions zakończył się powodzeniem</span></label>
+      <label><input type="checkbox"><span>Mogę wysyłać zmiany do swojego repozytorium (<code>git push</code>)</span></label>
+      <span class="done" id="done">0 / 11</span>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">?</span><span class="txt">Gdy coś nie działa</span></h2>
+    <table>
+      <tr><th>Problem</th><th>Co zrobić</th></tr>
+      <tr><td><code>npm ci</code> zgłasza błąd związany z wersją Node.js</td><td>Sprawdź wersję poleceniem <code>node --version</code>. Wymagana jest wersja 22 lub nowsza.</td></tr>
+      <tr><td>Testy kończą się błędem <code>EADDRINUSE: address already in use :::3000</code></td><td>Port 3000 zajmuje inna aplikacja, np. serwer deweloperski innego projektu. Sprawdź, która: <code>lsof -i :3000</code> (macOS, Linux) albo <code>netstat -ano | findstr :3000</code> (Windows), i ją zatrzymaj.</td></tr>
+      <tr><td>Testy UI wiszą albo kończą się błędem, a w innym terminalu działa <code>npm run dev</code></td><td>Zatrzymaj <code>npm run dev</code> (Ctrl+C) przed uruchomieniem testów. Playwright podłącza się wtedy do już działającego serwera deweloperskiego, pod którym nie ma frontendu, zamiast uruchomić własną aplikację.</td></tr>
+      <tr><td>Instalacja Playwrighta zatrzymuje się</td><td>Przyczyną może być blokada sieciowa. Spróbuj połączyć się przez inną sieć lub bez firmowego VPN.</td></tr>
+      <tr><td><code>git push</code> zwraca błąd 403</td><td>Git loguje się innym kontem niż to, na którym jest repozytorium, np. firmowym. Zaloguj się właściwym kontem (<code>gh auth login</code>, a potem <code>gh auth setup-git</code>).</td></tr>
+      <tr><td>Pipeline nie uruchamia się</td><td>Wróć do kroku 06 i sprawdź, czy workflowy są włączone oraz czy repozytorium jest publiczne.</td></tr>
+    </table>
+    <p>Jeśli napotkasz problem, którego nie uda Ci się rozwiązać, napisz do mnie jeszcze przed
+    warsztatem. Rozwiążemy go wspólnie, żeby nie tracić czasu podczas zajęć.</p>
+  </section>
+
+  <footer>
+    Tomasz Klepacki · Test Lead / Test Automation Engineer<br>
+    Zaznaczenia na liście kontrolnej zapisują się w tej przeglądarce.
+  </footer>
+</div>
+
+<script>
+(function () {
+  var KEY = 'cicd-workshop:checklist';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('#check input'));
+  var done = document.getElementById('done');
+
+  function render() {
+    var n = boxes.filter(function (b) { return b.checked; }).length;
+    done.textContent = n + ' / ' + boxes.length + (n === boxes.length ? '  — gotowe, do zobaczenia!' : '');
+  }
+  try {
+    var saved = JSON.parse(localStorage.getItem(KEY) || '[]');
+    boxes.forEach(function (b, i) { b.checked = !!saved[i]; });
+  } catch (e) { /* tryb prywatny albo zablokowane dane witryny */ }
+
+  boxes.forEach(function (b) {
+    b.addEventListener('change', function () {
+      render();
+      try {
+        localStorage.setItem(KEY, JSON.stringify(boxes.map(function (x) { return x.checked; })));
+      } catch (e) { /* zaznaczenia zostaną tylko na czas tej sesji */ }
+    });
+  });
+  render();
+})();
+</script>

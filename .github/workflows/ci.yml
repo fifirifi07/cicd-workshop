@@ -1,0 +1,46 @@
+name: CI
+
+# The starting point of the workshop.
+#
+# Everything below works: it checks out the code, installs dependencies and runs all the
+# tests. It is also slow, wasteful and tells you almost nothing until it finishes.
+# Every exercise of the workshop takes one problem from this file and fixes it.
+#
+# Do not "improve" this file before EXERCISE 01. Measuring it as it stands is the exercise.
+
+on:
+  push:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: API tests
+        run: npm run test:api
+
+      - name: UI tests
+        run: npm run test:ui
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/

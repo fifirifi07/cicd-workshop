@@ -1,0 +1,26 @@
+# Gitleaks configuration for the workshop.
+#
+# The extended default rule set is kept, plus one rule for this repository's own token
+# format. The workshop needs a branch that reliably trips the secret scanner, and a real
+# provider token cannot be used for that: GitHub push protection would refuse the push,
+# and a string that looks like a genuine AWS or Stripe key does not belong in a public
+# teaching repository.
+#
+# `wshop_sk_live_` is invented for this purpose. It is detected here and nowhere else.
+
+title = "Workshop secret scanning"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "workshop-api-token"
+description = "Workshop API token committed to the repository"
+regex = '''wshop_sk_live_[A-Za-z0-9]{24,}'''
+tags = ["key", "workshop"]
+
+[allowlist]
+description = "The rule definition itself"
+paths = [
+  '''\.gitleaks\.toml$''',
+]
