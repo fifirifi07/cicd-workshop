@@ -104,3 +104,17 @@ Zostały pominięte (status `skipped`) z powodu niepowodzenia poprzedzającego k
 
 - **Jeden build (Single Source of Truth):** Job `Build` publikuje katalog `dist/` jako artefakt z `retention-days: 1`. Joby `API tests` oraz `UI tests` pobierają gotową paczkę przez `actions/download-artifact@v4` i uruchamiają aplikację komendą `npm start` zamiast ponownie kompilować kod w `webServer`.
 - **Weryfikacja błędu builda (`check-build` / PR #4):** Import nieistniejącego pliku CSS zatrzymał job `Build` na czerwono. Joby `Lint and typecheck` i `Unit tests` były zielone, a `API tests` i `UI tests` w ogóle nie wystartowały (status `skipped`), zapobiegając uruchomieniu testów na nieskompilowanym kodzie.
+
+### Zadanie 06 — Skan bezpieczeństwa
+
+| Co | Po ZADANIU 05 | Po ZADANIU 06 |
+|---|---|---|
+| Czas do informacji o tokenie w kodzie | **nigdy** (przechodziło) | **15s** (na gałęzi `check-payments`) |
+| Czas joba `Security` | — | **12s** (na `main`) |
+| Czas całego przebiegu (Total duration) | 3m 14s | **3m 15s** |
+
+#### Decyzja: blokować czy ostrzegać? (krok 4)
+Job `Security` bezwzględnie powinien **blokować** scalenie pull requesta, ponieważ wyciek poufnych danych (np. klucza API do bramki płatności) lub wprowadzenie biblioteki ze znaną podatnością poziomu *high/critical* bezpośrednio narusza bezpieczeństwo aplikacji i infrastruktury, a po zmergowaniu sekret zostaje trwale utrwalony w historii gita i wymaga natychmiastowej procedury rotacji oraz unieważnienia u dostawcy.
+
+- **Weryfikacja na `main`:** Job `Security` wystartował równolegle z `quality`, `unit` i `build`, zakończył się sukcesem po **12 sekundach** (brak podatności i sekretów w czystym kodzie), znacznie szybciej niż testy UI.
+- **Weryfikacja wycieku sekretu (`check-payments` / PR #5):** Job `Security` zatrzymał się na czerwono po **15 sekundach**. W logach Gitleaks poprawnie zidentyfikował plik `src/server/payments.ts`, regułę `workshop-api-token` oraz zredagował wartość tokenu (`REDACTED`), nie ujawniając go w logach CI.
