@@ -184,5 +184,27 @@ Testy UI nie importują bezpośrednio modułów kodu źródłowego aplikacji (ot
 4. **Weryfikacja błędu (`check-catalog`):**
    Dzięki ustawieniu `strategy.fail-fast: false` awaria w `UI tests 2/4` nie anulowała pozostałych trzech shardów (shardy 1, 3 i 4 zakończyły się sukcesem). Dzięki `if: always()` przy kroku uploadu artefaktów na stronie przebiegu pojawiły się wszystkie 4 niezależne raporty: `playwright-report-1` do `playwright-report-4`.
 
+### Zadanie 10 — Matrix, który liczy sam siebie
+
+#### Pomiary i porównanie:
+
+| Co | PR (2 shardy) | main (8 shardów) | main (4 shardy, z Zadania 09) |
+|---|---|---|---|
+| Czas najdłuższego sharda | **25s** | **56s** | **57s** |
+| Łączny czas jobów (Usage) | **127s** (2m 07s) | **451s** (7m 31s) | **313s** (5m 13s) |
+| Czas całego przebiegu (Wall-clock) | **1m 08s** (68s) | **1m 38s** (98s) | **1m 45s** (105s) |
+| Suma testów ze shardów | **5** (3 + 2) | **123** (15+15+16+16+15+15+16+15) | 123 |
+| Jobów jednocześnie w szczycie | **5** | **9** | 5 |
+| Headroom do limitu 20 jobów | **15 wolnych slotów** | **11 wolnych slotów** | 15 wolnych slotów |
+
+#### Wnioski:
+1. **Dopasowanie zasobów do kontekstu (Fail-fast & Resource optimization):**
+   - Na pull requeście uruchamiamy zaledwie 5 testów smoke. Dzielenie ich na 4 lub 8 shardów marnowałoby maszyny. Dynamiczny matrix tworzy dokładnie **2 shardy** (`[1,2]`), co pozwoliło wykonać shardy w 24s i 25s, skracając cały czas walidacji PR do rekordowych **1m 08s**.
+   - Spójność mianownika: we wszystkich miejscach (`matrix`, `name`, `--shard`) dynamiczne wyrażenie `${{ github.event_name == 'pull_request' && 2 || 8 }}` gwarantuje, że nie pominiemy żadnego testu (suma testów na `main` wynosi dokładnie 123, a na PR dokładnie 5).
+2. **Czy 8 shardów uzasadnia dodatkowy koszt w porównaniu z 4 shardami?**
+   - **Nie.** Przejście z 4 na 8 shardów dało zaledwie **1 sekundę zysku** na najdłuższym shardzie (56s vs 57s) i tylko 7 sekund zysku w czasie całego pipeline'u (1m 38s vs 1m 45s).
+   - W zamian koszt minut runnerów wzrósł aż o **44%** (z 5m 13s do 7m 31s), a liczba zajętych współbieżnie maszyn w szczycie wzrosła z 5 do 9 (zbliżając się do limitu 20 jobów). Narzut startowy runnerów przy 8 maszynach dominuje nad zyskiem z paralelizacji.
+
+
 
 
