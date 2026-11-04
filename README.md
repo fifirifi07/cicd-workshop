@@ -78,3 +78,4 @@ między „testuję na runnerze" a „testuję wdrożone środowisko".
 **`API_LATENCY_MS`** — symulowane opóźnienie odpowiedzi API, domyślnie `150`.
 Bez niego API odpowiada w ułamku milisekundy, bo dane są w pamięci — a żaden prawdziwy
 sklep tak się nie zachowuje. Ustaw `0`, żeby wyłączyć.
+Ostatnia poprawka dnia.
