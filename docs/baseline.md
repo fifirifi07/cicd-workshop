@@ -67,3 +67,15 @@ Zostały pominięte (status `skipped`) z powodu niepowodzenia poprzedzającego k
 
 - **Weryfikacja błędu w koszyku (`check-cart` / PR #2):** Pipeline zatrzymał się na kroku `Lint` ze statusem czerwonym po zaledwie **12 sekundach** od rozpoczęcia joba (błąd reguł `eqeqeq` oraz `prefer-const`). Kolejne kroki zostały pominięte.
 - **Weryfikacja cache:** W drugim przebiegu krok `Cache Playwright browsers` przywrócił przeglądarkę z klucza, a krok instalacji przeglądarki został pominięty (`skipped`). Krok `Install dependencies` skrócił się z 25s do 5s dzięki cache npm.
+
+### Zadanie 04 — Rozbicie na joby i `needs`
+
+#### Odpowiedzi na pytania (krok 1):
+1. **Czy lint, testy jednostkowe i build zależą od siebie, czy mogą wystartować równolegle?**
+   Mogą wystartować równolegle. Żadne z nich nie potrzebuje wyniku ani artefaktów pozostałych — lint bada statycznie składnię i styl, testy jednostkowe testują izolowane funkcje w pamięci, a build kompiluje paczkę produkcyjną.
+2. **Czy testy API i UI powinny wystartować, jeśli aplikacja się nie buduje?**
+   Nie. Testy API i UI uruchamiają aplikację przez lokalny serwer (`webServer`), więc jeśli build zawiedzie, testy i tak zakończą się błędem. Ich uruchamianie byłoby stratą minut runnera.
+3. **Czy warto uruchamiać drogie testy API i UI, jeśli lint albo testy jednostkowe już wykryły problem?**
+   Nie. Zgodnie z zasadą *fail-fast*, jeśli tańsze i szybsze kontrole wykryły błąd, nie ma sensu marnować minut na kosztowne testy UI (trwające ponad 2 minuty), bo kod i tak nie może trafić do `main`.
+4. **Na co testy API i UI czekają, bo muszą, a na co tylko dlatego, że tak zdecydowaliśmy?**
+   Na `build` czekają, bo **muszą** (zależność techniczna — serwer potrzebuje skompilowanej aplikacji). Na `quality` (lint/typecheck) oraz `unit` czekają **dlatego, że tak zdecydowaliśmy** (świadoma bramka kosztowo-jakościowa, by oszczędzać zasoby).
