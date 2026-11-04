@@ -153,4 +153,36 @@ Job `Security` bezwzględnie powinien **blokować** scalenie pull requesta, poni
 #### Dlaczego `--only-changed` nie nadaje się jako jedyny filtr testów UI w CI:
 Testy UI nie importują bezpośrednio modułów kodu źródłowego aplikacji (otwierają działającą aplikację przez przeglądarkę pod adresem URL), w związku z czym analiza statyczna importów gita w `playwright test --only-changed` nie wykrywa powiązania między zmianami w komponentach i widokach (np. `src/web/views/Catalog.tsx`) a plikami testów Playwright, raportując 0 testów do uruchomienia (`Total: 0 tests in 0 files`) przy realnej modyfikacji logiki interfejsu.
 
+### Zadanie 09 — Równoległość: najpierw workers, potem shardowanie
+
+#### Dwa rodzaje równoległości:
+
+| | **workers** | **shardowanie** |
+|---|---|---|
+| Co skaluje | procesy na jednej maszynie | liczbę maszyn |
+| Mechanizm | `workers` w `playwright.config.ts` | `strategy.matrix` + `--shard` |
+| Twardy limit | rdzenie runnera (4 w GitHub Actions) | 20 współbieżnych jobów (konto Free) |
+| Koszt w minutach | **Niski** (stały narzut maszyny ponoszony tylko raz) | **Wysoki** (mnoży narzut bootstrapu runnera przez liczbę shardów) |
+
+#### Pomiary i porównanie konfiguracji:
+
+| Konfiguracja | Czas `UI tests` (najdłuższy job) | Łączny czas jobów (Usage) | Czas całego przebiegu (Wall-clock) |
+|---|---|---|---|
+| A: `workers: 1`, bez shardowania | 2m 47s (167s) | 4m 56s (296s) | 3m 33s (213s) |
+| B: `workers: 4`, bez shardowania | 1m 03s (63s) | **2m 52s (172s)** | 1m 50s (110s) |
+| C: 4 shardy × `workers: 4` | **57s** | 5m 13s (313s) | **1m 45s (105s)** |
+| dodatkowo: 8 shardów × `workers: 4` | 1m 00s (60s) | 7m 49s (469s) | 1m 45s (105s) |
+
+#### Wnioski i odpowiedzi na pytania:
+1. **Co bardziej skróciło czas oczekiwania na wynik — workers czy shardowanie?**
+   Zdecydowanie **workers**. Zwiększenie liczby workerów z 1 do 4 na pojedynczym runnerze skróciło czas joba `UI tests` aż o **104 sekundy** (z 2m 47s do 1m 03s). Shardowanie na 4 maszyny dało już tylko dodatkowe 6 sekund zysku (z 63s do 57s), a przy 8 shardach zysk wyniósł 0s (czas najdłuższego sharda wyniósł 60s).
+2. **Jak zmienił się łączny czas jobów (koszt infrastruktury)?**
+   - Przy **workers: 4** łączny czas jobów **spadł** z 4m 56s do 2m 52s, ponieważ runner skończył pracę szybciej, a narzut rozruchu środowiska był opłacony tylko raz.
+   - Przy **shardowaniu** łączny czas jobów **wzrósł drastycznie**: do 5m 13s przy 4 shardach i do aż 7m 49s przy 8 shardach.
+3. **Dlaczego więcej shardów nie oznacza proporcjonalnie krótszego przebiegu?**
+   Każdy nowy shard to całkowicie nowa wirtualna maszyna. Każdy runner musi od zera wykonać akcje: `checkout`, `setup-node`, `npm ci`, przywrócenie cache przeglądarki Playwright, pobranie artefaktu z buildem aplikacji oraz uruchomienie lokalnego serwera testowego `webServer`. Ten stały narzut rozruchu wynosi ok. 30–35 sekund na każdy shard. Gdy same testy w shardzie trwają kilkanaście sekund, czas konfiguracji środowiska zaczyna całkowicie dominować nad czasem wykonywania testów.
+4. **Weryfikacja błędu (`check-catalog`):**
+   Dzięki ustawieniu `strategy.fail-fast: false` awaria w `UI tests 2/4` nie anulowała pozostałych trzech shardów (shardy 1, 3 i 4 zakończyły się sukcesem). Dzięki `if: always()` przy kroku uploadu artefaktów na stronie przebiegu pojawiły się wszystkie 4 niezależne raporty: `playwright-report-1` do `playwright-report-4`.
+
+
 
