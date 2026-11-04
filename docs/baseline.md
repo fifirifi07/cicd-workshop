@@ -225,6 +225,28 @@ Testy UI nie importują bezpośrednio modułów kodu źródłowego aplikacji (ot
    - Warunek `if: always() && needs.test-ui.result != 'skipped'` gwarantuje, że gdy dowolny shard zawiedzie, scalony raport i tak zostanie wygenerowany (pokazując w jednym miejscu 122 zdane testy i 1 błąd ze zrzutem ekranu i śladem wykonania).
    - Gdy zmiany dotyczą tylko dokumentacji (np. `README.md`), a testy UI są pominięte przez filtr ścieżek, `UI report` również otrzymuje status `Skipped`, zamiast failować z powodu braku artefaktów.
 
+### Zadanie 12 — Raportowanie w GitHubie: jeden format dla wszystkich testów
+
+| Co | ZADANIE 01 | Po ZADANIU 12 |
+|---|---|---|
+| Kliknięć do nazwy testu z błędem | 5–6 kliknięć (przeszukiwanie logów w terminalu lub pobieranie i rozpakowywanie zipa) | **1 kliknięcie** (check run *Test results* lub sekcja Job Summary na stronie przebiegu) |
+| Czy trzeba coś pobierać | **Tak** (dla testów UI konieczne było pobranie archiwum HTML) | **Nie** (wszystkie 245 testów widoczne bezpośrednio w UI GitHuba) |
+| Czas joba `Test report` | — (brak) | **11–12s** |
+
+#### Kluczowe elementy rozwiązania:
+1. **Wspólny standard JUnit XML:**
+   - Testy jednostkowe (`vitest.config.ts`), API i UI (`playwright.config.ts`) eksportują wyniki do formatu JUnit XML (`reports/*.xml`).
+   - Każdy job publikuje swój raport jako artefakt `junit-*` z `if: always()`, dzięki czemu wyniki powstają zwłaszcza przy awarii testów.
+2. **Job `Test report` (Zero-click feedback):**
+   - Pobiera wszystkie pliki `junit-*` za pomocą `actions/download-artifact@v4` z `merge-multiple: true`.
+   - Tworzy dedykowany check run *Test results* (`dorny/test-reporter@v3` z `fail-on-error: true`), gdzie widać listę wszystkich testów i szczegółowy komunikat błędu z adnotacją.
+   - Generuje tabelę podsumowującą w **Job Summary** za pomocą lekkiego skryptu `node scripts/ci-summary.mjs reports/*.xml` (bez potrzeby instalowania node_modules!).
+3. **Weryfikacja błędu (`check-discount` / PR #11):**
+   - Po wprowadzeniu błędu w `src/shared/discounts.ts`, testy jednostkowe zawiodły.
+   - W check runie *Test results* od razu pojawiła się nazwa testu `discountAmount > rounds down, never up` i diff `expected 100 to be 99`.
+   - W Job Summary pojawiło się czytelne zestawienie z ikoną ❌ przy zestawie `unit`, a programista nie musiał pobierać ani jednego pliku ani przeszukiwać logów terminala.
+
+
 
 
 
