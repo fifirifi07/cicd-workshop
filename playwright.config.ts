@@ -24,7 +24,11 @@ export default defineConfig({
   retries: 0,
 
   reporter: process.env.CI
-    ? [['blob'], ['github']]
+    ? [
+        ['blob'],
+        ['github'],
+        ['junit', { outputFile: `reports/${process.env.REPORT_NAME ?? 'playwright'}.xml` }],
+      ]
     : [['list'], ['html', { open: 'never' }]],
 
   use: {
