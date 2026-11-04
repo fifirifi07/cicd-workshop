@@ -142,3 +142,15 @@ Job `Security` bezwzględnie powinien **blokować** scalenie pull requesta, poni
    - Możliwość wyboru zestawu parametrów (`smoke`, `regression`, `all`).
    - Przetestowano wybór `regression`: job otrzymał nazwę `UI tests (regression)`, wykonał flagę `--grep-invert @smoke` i zakończył się sukcesem z wynikiem **118 passed** w 2m 40s.
 
+### Zadanie 08 — Selektywność na dwóch poziomach
+
+| Scenariusz | Czas przebiegu | Wynik jobów testowych |
+|---|---|---|
+| Zmiana tylko w `README.md` | **42s** | `API tests` i `UI tests` pominięte (`Skipped`) |
+| Zmiana w `src/web/` | **1m 26s** (86s) | `API tests` pominięte (`Skipped`), `UI tests (smoke)` wykonane |
+| Pull request bez selektywności (wynik z ZADANIA 07) | **1m 26s** (86s) | Zawsze uruchamiane i `API tests` (27s), i `UI tests (smoke)` (49s) |
+
+#### Dlaczego `--only-changed` nie nadaje się jako jedyny filtr testów UI w CI:
+Testy UI nie importują bezpośrednio modułów kodu źródłowego aplikacji (otwierają działającą aplikację przez przeglądarkę pod adresem URL), w związku z czym analiza statyczna importów gita w `playwright test --only-changed` nie wykrywa powiązania między zmianami w komponentach i widokach (np. `src/web/views/Catalog.tsx`) a plikami testów Playwright, raportując 0 testów do uruchomienia (`Total: 0 tests in 0 files`) przy realnej modyfikacji logiki interfejsu.
+
+
