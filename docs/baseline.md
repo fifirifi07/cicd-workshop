@@ -48,4 +48,10 @@ Zostały pominięte (status `skipped`) z powodu niepowodzenia poprzedzającego k
 
 ## Pomiary z kolejnych zadań
 
-Tu dopisujesz pomiary i odpowiedzi z kolejnych zadań, pod nagłówkiem z numerem zadania.
+### Zadanie 02 — Triggery i concurrency
+
+| Co | Wynik |
+|---|---|
+| Liczba przebiegów po szybkich pushach | Wcześniejsze przebiegi zostały anulowane (`Cancelled`), w toku pozostał tylko ostatni |
+| Czy PR uruchamia jeden przebieg czy dwa | Dokładnie **jeden** przebieg (tylko zdarzenie `pull_request`, brak zdarzenia `push` dla brancha innego niż `main`) |
+| Zaoszczędzone minuty | 2 anulowane przebiegi × ~4 min = **ok. 8 minut** zaoszczędzonego czasu runnerów |
