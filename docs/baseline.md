@@ -79,3 +79,15 @@ Zostały pominięte (status `skipped`) z powodu niepowodzenia poprzedzającego k
    Nie. Zgodnie z zasadą *fail-fast*, jeśli tańsze i szybsze kontrole wykryły błąd, nie ma sensu marnować minut na kosztowne testy UI (trwające ponad 2 minuty), bo kod i tak nie może trafić do `main`.
 4. **Na co testy API i UI czekają, bo muszą, a na co tylko dlatego, że tak zdecydowaliśmy?**
    Na `build` czekają, bo **muszą** (zależność techniczna — serwer potrzebuje skompilowanej aplikacji). Na `quality` (lint/typecheck) oraz `unit` czekają **dlatego, że tak zdecydowaliśmy** (świadoma bramka kosztowo-jakościowa, by oszczędzać zasoby).
+
+#### Pomiary i porównanie:
+
+| Co | Po ZADANIU 03 | Po ZADANIU 04 |
+|---|---|---|
+| Czas całego przebiegu (Total duration) | 3m 05s | **3m 15s** |
+| **Suma** czasów wszystkich jobów (Usage) | 3m 05s (1 job) | **4m 09s** (suma 5 jobów) |
+| Czas do informacji o błędzie lintu | 12s | **28s** |
+| Liczba kontroli widocznych na pull requeście | 1 (`test`) | **5** (`Lint and typecheck`, `Unit tests`, `Build`, `API tests`, `UI tests`) |
+
+- **Przebieg na `main`:** Joby `Lint and typecheck` (17s), `Unit tests` (10s) i `Build` (12s) wystartowały równolegle. Po ich pomyślnym zakończeniu równolegle wystartowały `API tests` (43s) oraz `UI tests` (2m 47s).
+- **Przebieg na PR (`check-cart-2` / PR #3):** Job `Lint and typecheck` zakończył się błędem po 28s. Dzięki `needs: [build, quality, unit]` joby `API tests` oraz `UI tests` w ogóle nie wystartowały (status `skipped`), oszczędzając ponad 2,5 minuty pracy ciężkich runnerów Playwright. Na PR widoczne jest dokładnie 5 osobnych kontroli z czytelnym wskazaniem, który job zawiódł.
