@@ -34,7 +34,7 @@ export function isDiscountValid(code: DiscountCode, now: Date = new Date()): boo
 export function discountAmount(subtotal: number, code: DiscountCode | null): number {
   if (!code || code.percentOff === null) return 0;
   if (subtotal <= 0) return 0;
-  return Math.floor((subtotal * code.percentOff) / 100);
+  return Math.ceil((subtotal * code.percentOff) / 100);
 }
 
 export type DiscountRejection = 'unknown' | 'expired';
