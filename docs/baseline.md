@@ -55,3 +55,15 @@ Zostały pominięte (status `skipped`) z powodu niepowodzenia poprzedzającego k
 | Liczba przebiegów po szybkich pushach | Wcześniejsze przebiegi zostały anulowane (`Cancelled`), w toku pozostał tylko ostatni |
 | Czy PR uruchamia jeden przebieg czy dwa | Dokładnie **jeden** przebieg (tylko zdarzenie `pull_request`, brak zdarzenia `push` dla brancha innego niż `main`) |
 | Zaoszczędzone minuty | 2 anulowane przebiegi × ~4 min = **ok. 8 minut** zaoszczędzonego czasu runnerów |
+
+### Zadanie 03 — Szybkie kontrole najpierw i cache
+
+| Co | Przed (Baseline) | Pierwszy przebieg | Drugi przebieg (Cache) |
+|---|---|---|---|
+| Czas do informacji o błędzie lintu | **nigdy** | — | **12s** (na gałęzi `check-cart`) |
+| `Install dependencies` | 39s | 25s | **5s** (cache npm) |
+| `Install Playwright browsers` | 18s (wszystkie przeglądarki) | 8s (tylko chromium) | **Pominięty (0s)** — cache hit (`~/.cache/ms-playwright`) |
+| Cały przebieg | 4m 01s | 3m 25s | **3m 05s** (skrócenie o 20s) |
+
+- **Weryfikacja błędu w koszyku (`check-cart` / PR #2):** Pipeline zatrzymał się na kroku `Lint` ze statusem czerwonym po zaledwie **12 sekundach** od rozpoczęcia joba (błąd reguł `eqeqeq` oraz `prefer-const`). Kolejne kroki zostały pominięte.
+- **Weryfikacja cache:** W drugim przebiegu krok `Cache Playwright browsers` przywrócił przeglądarkę z klucza, a krok instalacji przeglądarki został pominięty (`skipped`). Krok `Install dependencies` skrócił się z 25s do 5s dzięki cache npm.
