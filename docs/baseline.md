@@ -278,3 +278,32 @@ Testy UI nie importują bezpośrednio modułów kodu źródłowego aplikacji (ot
    - Krok `Upload traces` w jobie `test-ui` wykonuje się tylko wtedy, gdy dany shard zakończy się błędem (`if: failure()`).
    - W przebiegu z błędem powstał wyłącznie dedykowany artefakt `traces-4` (228 KB) dla sharda 4. Pozostałe 7 zielonych shardów oraz w pełni udane przebiegi na `main` nie tworzą zbędnych artefaktów.
    - Dłuższy czas przechowywania trace'ów (`retention-days: 14`) zapewnia komfort powrotu do analizy błędu bez zaśmiecania storage'u zielonymi przebiegami.
+
+### Zadanie 14 — Bramka, uprawnienia i domknięcie
+
+#### Zmierz — porównanie dnia
+
+| | Na początku dnia (Zadanie 01) | Na koniec dnia (Zadanie 14) | Zmiana / Korzyść |
+|---|---|---|---|
+| **Cały przebieg na `main`** | 4m 01s | **1m 38s** (98s) | **2.5x szybciej** (oszczędność 2m 23s) |
+| **Cały przebieg na pull requeście** | 4m 01s | **33s** (niedotyczący UI/API) / **1m 08s** (smoke PR) | **3.5x – 7.3x szybciej** |
+| **Czas do informacji o zmianie w koszyku (lint)** | **nigdy** (brak lintera w CI) | **16s** (job `Lint and typecheck`) | Natychmiastowe wykrycie błędów statycznych |
+| **Czas do informacji o zmianie w rabacie (unit)** | 61s (1m 01s) | **15s** (job `Unit tests`) | **4x szybszy** pierwszy czerwony sygnał |
+| **Czy wykrywa token w kodzie** | **nie** (brak skanera) | **tak** (job `Security` z Gitleaks w 13s) | Pełna ochrona przed wyciekiem sekretów |
+| **Czy jest raport, gdy testy nie przejdą** | **nie** (kroki pomijane po błędzie) | **tak** (check run *Test results*, Job Summary i scalony HTML) | Zero-click feedback w UI GitHuba |
+| **Liczba kontroli na pull requeście** | 1 (jeden monolityczny job) | **1** stała bramka (`Pipeline status`) | Ochrona brancha niezależna od shardów i selektywności |
+| **Czy da się scalić zmianę z czerwonym testem** | **tak** (brak ochrony brancha) | **nie** (bramka `Pipeline status` w rulesecie `main`) | Bezpieczeństwo gałęzi produkcyjnej |
+
+#### Kluczowe elementy rozwiązania:
+1. **Zasada najmniejszych uprawnień (`least privilege`):**
+   - Na poziomie globalnym workflow zdefiniowano `permissions: { contents: read }`.
+   - Tylko jedyny job tworzący check run (`Test report`) posiada podwyższone uprawnienia `checks: write`.
+2. **Ograniczenie czasu wykonania (`timeout-minutes`):**
+   - Każdy job posiada precyzyjnie określony limit (`timeout-minutes: 15`, a bramka `5`), eliminując ryzyko 6-godzinnego zawieszenia runnera.
+3. **Końcowa bramka `Pipeline status`:**
+   - Działa z `if: always()` i agreguje wyniki wszystkich jobów (`success` oraz `skipped`).
+   - GitHub Branch Ruleset wymaga wyłącznie `Pipeline status`, co zapobiega zablokowaniu PR przy pominiętych shardach lub zmianach nazwy jobów dynamicznych.
+4. **Weryfikacja ochrony `main`:**
+   - Bezpieczna zmiana (PR #12 z `gate-readme`) przeszła pomyślnie z zielonym `Pipeline status` i została automatycznie scalona.
+   - Błędna zmiana (PR #13 z `gate-discount`) została zablokowana przez czerwoną bramkę `Pipeline status` po wykryciu błędu przez testy jednostkowe w 49s.
+   - Bezpośredni push do `main` został natychmiast odrzucony przez regułę repozytorium (GH013).
