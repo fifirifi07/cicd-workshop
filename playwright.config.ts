@@ -39,7 +39,7 @@ export default defineConfig({
   webServer: process.env.BASE_URL
     ? undefined
     : {
-        command: 'npm run build && npm start',
+        command: 'npm start',
         url: 'http://localhost:3000/api/health',
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
