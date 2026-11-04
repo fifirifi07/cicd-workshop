@@ -34,7 +34,7 @@ export default defineConfig({
   use: {
     baseURL,
     // Trace everything, always. Convenient, but artifacts balloon - EXERCISE 13.
-    trace: 'on',
+    trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
 

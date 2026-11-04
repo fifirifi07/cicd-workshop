@@ -228,6 +228,14 @@ jobs:
           path: reports/ui-*.xml
           retention-days: 1
 
+      - name: Upload traces
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: traces-${{ matrix.shard }}
+          path: test-results/
+          retention-days: 14
+
   ui-report:
     name: UI report
     runs-on: ubuntu-latest
