@@ -205,6 +205,27 @@ Testy UI nie importują bezpośrednio modułów kodu źródłowego aplikacji (ot
    - **Nie.** Przejście z 4 na 8 shardów dało zaledwie **1 sekundę zysku** na najdłuższym shardzie (56s vs 57s) i tylko 7 sekund zysku w czasie całego pipeline'u (1m 38s vs 1m 45s).
    - W zamian koszt minut runnerów wzrósł aż o **44%** (z 5m 13s do 7m 31s), a liczba zajętych współbieżnie maszyn w szczycie wzrosła z 5 do 9 (zbliżając się do limitu 20 jobów). Narzut startowy runnerów przy 8 maszynach dominuje nad zyskiem z paralelizacji.
 
+### Zadanie 11 — Scalanie raportów z shardów
+
+| Co | Przed (Zadanie 10) | Po (Zadanie 11) |
+|---|---|---|
+| Liczba raportów do otwarcia dla pełnego wyniku | 8 (lub 4) osobnych archiwów | **1 scalony raport** (`playwright-report`) |
+| Czy raport powstaje przy błędzie | Tak, ale rozbity (osobno dla każdego sharda) | **Tak**, 1 spójny raport (122 zielone, 1 czerwony) |
+| Czas joba `UI report` | — (brak) | **15–20s** |
+| Zachowanie, gdy testy UI są pominięte | — | Job `UI report` ma status **`Skipped`** (szara ikona) |
+
+#### Kluczowe elementy rozwiązania:
+1. **Format pośredni `blob` na CI:**
+   - Shardy nie generują już ciężkich raportów HTML, lecz format pośredni `blob` (`['blob'], ['github']`), zachowując lokalnie wygodny reporter `html`.
+   - Raporty blob (`blob-report-*`) mają krótki czas retencji (`retention-days: 1`), co oszczędza przestrzeń dyskową na GitHubie.
+2. **Dedykowany job scalający (`UI report`):**
+   - Pobiera wszystkie raporty cząstkowe za pomocą `pattern: blob-report-*` i `merge-multiple: true`.
+   - Łączy wyniki poleceniem `npx playwright merge-reports --reporter=html ./all-blob-reports` i publikuje jeden kompletny raport HTML z `retention-days: 7`.
+3. **Odporność na błędy i unikanie fałszywych alarmów:**
+   - Warunek `if: always() && needs.test-ui.result != 'skipped'` gwarantuje, że gdy dowolny shard zawiedzie, scalony raport i tak zostanie wygenerowany (pokazując w jednym miejscu 122 zdane testy i 1 błąd ze zrzutem ekranu i śladem wykonania).
+   - Gdy zmiany dotyczą tylko dokumentacji (np. `README.md`), a testy UI są pominięte przez filtr ścieżek, `UI report` również otrzymuje status `Skipped`, zamiast failować z powodu braku artefaktów.
+
+
 
 
 
