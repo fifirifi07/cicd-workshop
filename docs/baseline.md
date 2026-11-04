@@ -118,3 +118,27 @@ Job `Security` bezwzględnie powinien **blokować** scalenie pull requesta, poni
 
 - **Weryfikacja na `main`:** Job `Security` wystartował równolegle z `quality`, `unit` i `build`, zakończył się sukcesem po **12 sekundach** (brak podatności i sekretów w czystym kodzie), znacznie szybciej niż testy UI.
 - **Weryfikacja wycieku sekretu (`check-payments` / PR #5):** Job `Security` zatrzymał się na czerwono po **15 sekundach**. W logach Gitleaks poprawnie zidentyfikował plik `src/server/payments.ts`, regułę `workshop-api-token` oraz zredagował wartość tokenu (`REDACTED`), nie ujawniając go w logach CI.
+
+### Zadanie 07 — Trzy tryby uruchomienia: PR, main, noc
+
+| Co | Przed (Zadanie 06) | Po (Zadanie 07) |
+|---|---|---|
+| Czas `UI tests` na pull requeście | 2m 46s | **49s** |
+| Czas `UI tests` na `main` | 2m 46s | **2m 53s** (173s) |
+| Całkowity czas przebiegu pull requesta | 3m 15s | **1m 26s** (86s) |
+| Liczba testów UI na pull requeście | 123 | **5** (tylko `@smoke`) |
+
+#### Trzy tryby wykonania testów UI:
+1. **Pull Request (`pull_request`):**
+   - Nazwa joba: `UI tests (smoke)`
+   - Uruchamiane testy: tylko krytyczna ścieżka oznaczona tagiem `@smoke` (`npx playwright test --project=ui-chromium --grep @smoke`).
+   - Wynik: **5 passed** w zaledwie 9 sekund (cały job 49s).
+   - Całkowity czas walidacji PR spadł z ponad 3 minut do **1m 26s**, dając programistom natychmiastowy feedback.
+2. **Push na `main` oraz przebieg nocny (cron `0 2 * * *` UTC):**
+   - Nazwa joba: `UI tests (full regression)`
+   - Uruchamiane testy: pełen zestaw (`npx playwright test --project=ui-chromium`).
+   - Wynik na `main`: **123 passed** w 2m 53s.
+3. **Ręczne uruchomienie (`workflow_dispatch`):**
+   - Możliwość wyboru zestawu parametrów (`smoke`, `regression`, `all`).
+   - Przetestowano wybór `regression`: job otrzymał nazwę `UI tests (regression)`, wykonał flagę `--grep-invert @smoke` i zakończył się sukcesem z wynikiem **118 passed** w 2m 40s.
+
