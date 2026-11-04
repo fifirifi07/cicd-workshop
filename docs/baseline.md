@@ -91,3 +91,16 @@ Zostały pominięte (status `skipped`) z powodu niepowodzenia poprzedzającego k
 
 - **Przebieg na `main`:** Joby `Lint and typecheck` (17s), `Unit tests` (10s) i `Build` (12s) wystartowały równolegle. Po ich pomyślnym zakończeniu równolegle wystartowały `API tests` (43s) oraz `UI tests` (2m 47s).
 - **Przebieg na PR (`check-cart-2` / PR #3):** Job `Lint and typecheck` zakończył się błędem po 28s. Dzięki `needs: [build, quality, unit]` joby `API tests` oraz `UI tests` w ogóle nie wystartowały (status `skipped`), oszczędzając ponad 2,5 minuty pracy ciężkich runnerów Playwright. Na PR widoczne jest dokładnie 5 osobnych kontroli z czytelnym wskazaniem, który job zawiódł.
+
+### Zadanie 05 — Artefakt builda zamiast trzech buildów
+
+| Co | Po ZADANIU 04 | Po ZADANIU 05 |
+|---|---|---|
+| Ile razy budowana jest aplikacja | 3 (Build + 2× webServer) | **1** (tylko raz w jobie `Build`) |
+| Czas joba `UI tests` | 2m 47s (167s) | **2m 46s** (166s) |
+| Czas joba `API tests` | 43s | **31s** (skrócenie o 12s) |
+| Suma czasów wszystkich jobów (Usage) | 4m 09s (249s) | **4m 06s** (246s) |
+| Czas całego przebiegu (Total duration) | 3m 15s | **3m 14s** |
+
+- **Jeden build (Single Source of Truth):** Job `Build` publikuje katalog `dist/` jako artefakt z `retention-days: 1`. Joby `API tests` oraz `UI tests` pobierają gotową paczkę przez `actions/download-artifact@v4` i uruchamiają aplikację komendą `npm start` zamiast ponownie kompilować kod w `webServer`.
+- **Weryfikacja błędu builda (`check-build` / PR #4):** Import nieistniejącego pliku CSS zatrzymał job `Build` na czerwono. Joby `Lint and typecheck` i `Unit tests` były zielone, a `API tests` i `UI tests` w ogóle nie wystartowały (status `skipped`), zapobiegając uruchomieniu testów na nieskompilowanym kodzie.
