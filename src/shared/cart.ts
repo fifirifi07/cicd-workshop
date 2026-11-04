@@ -23,7 +23,9 @@ export function clampQuantity(quantity: number): number {
 }
 
 export function subtotal(items: CartItem[]): number {
-  return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  let total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  if (total == 0) return 0;
+  return total;
 }
 
 export function itemCount(items: CartItem[]): number {
