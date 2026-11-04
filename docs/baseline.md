@@ -251,3 +251,30 @@ Testy UI nie importują bezpośrednio modułów kodu źródłowego aplikacji (ot
 
 
 
+
+### Zadanie 13 — Trace: „błąd w CI, co teraz?”
+
+| Co | `trace: 'on'` | `retain-on-failure` |
+|---|---|---|
+| Rozmiar `playwright-report` | **13.84 MB** (14 514 129 B) | **0.87 MB** (915 624 B) *(–94%)* |
+| Suma rozmiarów `blob-report-*` | **13.32 MB** (13 962 141 B) | **0.35 MB** (367 628 B) *(–97%)* |
+| Artefakt z trace'ami na zielonym `main` | — | **brak** (0 artefaktów `traces-*`) |
+| Czas od otwarcia trace'a do znalezienia przyczyny | **~1-2 minuty** | — |
+
+#### Odpowiedzi diagnostyczne na podstawie trace'a:
+1. **Czy zapytanie do API o produkty się powiodło i co zwróciło dla produktu `p-012`?**
+   - **Tak**, zapytanie sieciowe `GET /api/products?category=all&search=Hotfix&sort=name-asc&limit=6` zakończyło się kodem statusu **HTTP 200 OK**.
+   - W odpowiedzi zwrócony został produkt `p-012` (*Bluza Hotfix*), posiadający parametr magazynowy **`stock: 2`**. Dane z backendu dotarły do przeglądarki bez przeszkód.
+2. **Czy na stronie jest element z etykietą „Ostatnie sztuki”, czy go nie ma wcale?**
+   - Elementu **w ogóle nie ma w drzewie DOM** (`element(s) not found`, brak selektora `[data-testid="low-stock"]`). Nie był to element ukryty stylami CSS (np. `display: none` czy `visibility: hidden`), lecz węzeł nie został wyrenderowany przez silnik szablonów React.
+3. **Skoro dane są takie, jakie są, a strona wygląda tak, jak wygląda — w którym miejscu kodu szukać przyczyny?**
+   - Przyczyna leży w pliku **`src/web/views/Catalog.tsx`** w linii 144. Warunek sterujący wyświetlaniem etykiety niskiego stanu magazynowego został zmieniony z `product.stock <= 3` na `product.stock <= 1`. Ponieważ produkt `p-012` posiada `stock = 2`, warunek `2 <= 1` zwrócił `false` i etykieta nie pojawiła się w DOM.
+
+#### Kluczowe elementy rozwiązania:
+1. **`trace: 'retain-on-failure'` w `playwright.config.ts`:**
+   - Playwright stale rejestruje wykonanie testu (w buforze pamięci), ale na dysku zachowuje plik trace'a wyłącznie dla testów, które zakończyły się niepowodzeniem.
+   - Drastycznie redukuje to rozmiar raportu Playwright (z 13.84 MB do 0.87 MB przy 1 błędzie i do 0.26 MB na w pełni zielonym buildzie) oraz raportów cząstkowych blob (z 13.32 MB do 0.35 MB).
+2. **Warunkowy upload trace'ów (`if: failure()`):**
+   - Krok `Upload traces` w jobie `test-ui` wykonuje się tylko wtedy, gdy dany shard zakończy się błędem (`if: failure()`).
+   - W przebiegu z błędem powstał wyłącznie dedykowany artefakt `traces-4` (228 KB) dla sharda 4. Pozostałe 7 zielonych shardów oraz w pełni udane przebiegi na `main` nie tworzą zbędnych artefaktów.
+   - Dłuższy czas przechowywania trace'ów (`retention-days: 14`) zapewnia komfort powrotu do analizy błędu bez zaśmiecania storage'u zielonymi przebiegami.
